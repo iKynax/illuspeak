@@ -26,7 +26,7 @@ export function CornerCharacters() {
         alt=""
         aria-hidden
         draggable={false}
-        className="pointer-events-none absolute right-0 w-[clamp(92px,29vw,132px)]"
+        className="pointer-events-none absolute right-0 w-[clamp(60px,19vw,86px)]"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)" }}
         animate={{ y: [0, -3, 0] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}

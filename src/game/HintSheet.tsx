@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import type { Booth } from "../data/booths";
 import { stampVisual } from "./stamps";
@@ -14,6 +15,8 @@ interface HintSheetProps {
   onDevScan?: (payload: string) => void;
 }
 
+// Rendered via portal so it escapes the `isolate` stacking context in App.tsx
+// and always layers above the BottomTabBar.
 export function HintSheet({
   booth,
   index,
@@ -24,24 +27,31 @@ export function HintSheet({
 }: HintSheetProps) {
   const v = stampVisual(booth.id);
 
-  return (
+  return createPortal(
     <>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-ink/40"
+        className="fixed inset-0 z-[9998] bg-ink/40"
       />
       <motion.div
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-        className="pb-safe fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px]"
+        className="pb-safe fixed inset-x-0 bottom-0 z-[9999] mx-auto max-w-[430px]"
       >
-        <div className="ink-outline rounded-t-3xl bg-paper px-5 pb-6 pt-3">
+        <div className="ink-outline relative rounded-t-3xl bg-paper px-5 pb-6 pt-3">
           <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink/20" />
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-ink/8 font-body text-base text-ink/60 transition-colors hover:bg-ink/15"
+          >
+            ✕
+          </button>
 
           <div className="flex items-center gap-3">
             <span
@@ -99,6 +109,7 @@ export function HintSheet({
           )}
         </div>
       </motion.div>
-    </>
+    </>,
+    document.body,
   );
 }
