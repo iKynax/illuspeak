@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import jsQR from "jsqr";
-import { Button } from "../components/Button";
 
 interface ScannerProps {
   onResult: (text: string) => void;
@@ -12,6 +12,8 @@ type CamState = "starting" | "scanning" | "denied" | "error";
 
 // Camera-based QR scanning in-browser. getUserMedia + a per-frame jsQR decode.
 // No external scanner UI library — keeps the tree lean (CLAUDE.md).
+// Rendered via portal so it escapes the `isolate` stacking context in App.tsx
+// and always layers above the BottomTabBar + PlayButton.
 export function Scanner({ onResult, onClose }: ScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,12 +86,12 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-ink/95"
+      className="fixed inset-0 z-[9999] flex flex-col bg-ink/95"
     >
       <div className="relative flex-1 overflow-hidden">
         <video
@@ -99,6 +101,30 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
           className="h-full w-full object-cover"
         />
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* Close button — top-right, same spot as the game PlayButton */}
+        <motion.button
+          type="button"
+          onClick={onClose}
+          aria-label="Close camera"
+          whileTap={{ scale: 0.9 }}
+          className="absolute right-4 top-4 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-paper/30 bg-ink/60 text-paper backdrop-blur-sm"
+          style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-7 w-7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </motion.button>
 
         {/* Reticle */}
         {state === "scanning" && (
@@ -129,21 +155,20 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
             )}
             {state === "error" && (
               <p className="max-w-xs font-display text-xl text-paper">
-                Couldn’t start the camera on this device.
+                Couldn't start the camera on this device.
               </p>
             )}
           </div>
         )}
       </div>
 
-      <div className="pb-safe flex items-center justify-center gap-3 bg-ink px-5 py-4">
-        <p className="flex-1 font-body text-sm text-paper/80">
+      {/* Bottom helper text */}
+      <div className="pb-safe flex items-center justify-center bg-ink px-5 py-4">
+        <p className="font-body text-sm text-paper/80">
           Point at an Illuspeak stamp QR code.
         </p>
-        <Button variant="secondary" onClick={onClose}>
-          Close
-        </Button>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }

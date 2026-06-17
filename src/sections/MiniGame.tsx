@@ -183,7 +183,7 @@ export function MiniGame({ game }: MiniGameProps) {
             booth={selected}
             index={gameTargets.findIndex((b) => b.id === selected.id)}
             collected={game.collectedIds.has(selected.id)}
-            onScan={() => setScanning(true)}
+            onScan={() => { setSelectedId(null); setScanning(true); }}
             onClose={() => setSelectedId(null)}
             onDevScan={handleScanResult}
           />
