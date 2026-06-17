@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts (offline-safe). */
+@import "@fontsource/lilita-one/400.css";
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/800.css";
+
+/*
+  Illuspeak design tokens (see DESIGN.md).
+  FOUNDATION = soft pastels (use most). ACCENTS = vibrant (use sparingly, on purpose).
+*/
+@theme {
+  /* Foundation (dominant) */
+  --color-pink: #ffd6e8;
+  --color-blue: #bfe6ff;
+  --color-lilac: #e4d6ff;
+  --color-paper: #fff8fb;
+  --color-ink: #2a2140;
+
+  /* Accents (sparingly) */
+  --color-hotpink: #ff3dae;
+  --color-cyan: #2be3f2;
+  --color-lemon: #ffe53d;
+  --color-lime: #8cff3d;
+
+  /* Type */
+  --font-display: "Lilita One", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  /* Sticker-style hard offset shadow */
+  --shadow-sticker: 4px 4px 0 var(--color-ink);
+  --shadow-sticker-sm: 2px 2px 0 var(--color-ink);
+  --shadow-sticker-lg: 6px 6px 0 var(--color-ink);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--color-ink);
+    background: var(--color-paper);
+    /* Lock to a calm pastel wash by default. */
+    overscroll-behavior-y: none;
+  }
+
+  /* Disable text selection on UI chrome for an app-like feel. */
+  button,
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+@layer utilities {
+  /* Sticker shadow helpers */
+  .shadow-sticker {
+    box-shadow: var(--shadow-sticker);
+  }
+  .shadow-sticker-sm {
+    box-shadow: var(--shadow-sticker-sm);
+  }
+  .shadow-sticker-lg {
+    box-shadow: var(--shadow-sticker-lg);
+  }
+
+  /* Thick ink outline used across chunky components. */
+  .ink-outline {
+    border: 3px solid var(--color-ink);
+  }
+
+  /* Halftone dot field (recreate in CSS, not AI — see Asset_Extraction.md). */
+  .halftone {
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-ink) 18%, transparent) 1.2px,
+      transparent 1.3px
+    );
+    background-size: 8px 8px;
+  }
+
+  /* Safe-area padding for notch / home indicator. */
+  .pb-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
