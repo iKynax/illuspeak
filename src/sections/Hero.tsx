@@ -62,6 +62,14 @@ export function Hero({ onStart }: HeroProps) {
         className="absolute right-4 top-28 z-0 w-14 -rotate-6"
         duration={5}
       />
+      {/* Scattered character (was the pinned bottom-right corner). Lives in the
+          empty mid-hero gap so it never covers the wordmark/mascot/CTA. */}
+      <FloatingMascot
+        src="/assets/corner-bear-bottomright.webp"
+        className="pointer-events-none absolute -left-3 top-[56%] z-0 w-20 -rotate-6 opacity-90"
+        duration={5.5}
+        wobble={4}
+      />
 
       {/* ---- Foreground content ---- */}
       {/* Wordmark */}

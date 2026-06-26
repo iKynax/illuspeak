@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { BottomTabBar, type Tab } from "./components/BottomTabBar";
-import { CornerCharacters } from "./components/CornerCharacters";
 import { PlayButton } from "./components/PlayButton";
 import { LangToggle } from "./components/LangToggle";
 import { RainbowSpine } from "./components/RainbowSpine";
@@ -100,12 +99,7 @@ export default function App() {
       <div className="pointer-events-none fixed inset-y-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2">
         {/* Subtle EN/中 toggle — left of the play button on the main tab. */}
         <LangToggle className={tab === "main" ? "right-[4.75rem]" : "right-3"} />
-        {tab === "main" && (
-          <>
-            <CornerCharacters />
-            <PlayButton />
-          </>
-        )}
+        {tab === "main" && <PlayButton />}
       </div>
 
       <BottomTabBar active={tab} onChange={setTab} />

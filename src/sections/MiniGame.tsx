@@ -104,6 +104,14 @@ export function MiniGame({ game }: MiniGameProps) {
         className="absolute right-4 top-4 z-0 w-14 rotate-3"
         duration={4.6}
       />
+      {/* Scattered character (was the pinned top-left corner). Sits in the empty
+          lower padding, behind content, so it peeks without covering any text. */}
+      <FloatingMascot
+        src="/assets/corner-cats-topleft.webp"
+        className="pointer-events-none absolute right-3 bottom-6 z-0 w-20 opacity-90"
+        duration={5.2}
+        wobble={3}
+      />
 
       <header className="relative text-center">
         <Burst

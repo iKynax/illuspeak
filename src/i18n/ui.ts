@@ -87,6 +87,8 @@ export interface UIStrings {
     error: string;
     aim: string;
     goBack: string;
+    success: string;
+    tryAgain: string;
   };
   zones: Zones;
   lang: { label: string; en: string; zh: string };
@@ -174,6 +176,8 @@ export const UI: Record<Lang, UIStrings> = {
       error: "Couldn't start the camera on this device.",
       aim: "Point at an Illuspeak stamp QR code.",
       goBack: "Go back",
+      success: "Got it!",
+      tryAgain: "Allow camera & try again",
     },
     zones: {
       Culture: "Culture",
@@ -270,6 +274,8 @@ export const UI: Record<Lang, UIStrings> = {
       error: "无法在此设备上启动相机。",
       aim: "对准 Illuspeak 的印章二维码。",
       goBack: "返回",
+      success: "扫到啦！",
+      tryAgain: "允许相机并重试",
     },
     zones: {
       Culture: "文化",

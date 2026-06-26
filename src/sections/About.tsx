@@ -62,7 +62,7 @@ export function About() {
       <div className="pt-safe relative overflow-hidden px-5 pb-28 pt-10">
         <FloatingMascot
           src="/assets/mascot-surfer.webp"
-          className="pointer-events-none absolute right-3 top-6 z-0 w-16"
+          className="pointer-events-none absolute right-2 top-44 z-0 w-16"
           duration={4.2}
         />
         <FloatingDoodle className="left-2 top-40 w-9 z-0" duration={6}>
@@ -113,18 +113,19 @@ export function About() {
         {/* Live leaderboard (renders only when Supabase is configured) */}
         <Leaderboard />
 
-        {/* Sponsors — logos only, drop shadow for the light ones on light bg */}
+        {/* Sponsors — bare logos, no boxes/shadows, roughly uniform size.
+            Huak Huak's logo is solid white, so it alone gets a soft dark chip
+            to stay visible on the light page. */}
         <h2 className="mt-8 font-display text-2xl text-ink">{ui.about.sponsors}</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-3 items-center gap-x-4 gap-y-6">
           {sponsors.map((s) => (
-            <div
-              key={s.id}
-              className="ink-outline flex h-20 items-center justify-center rounded-2xl bg-paper p-3"
-            >
+            <div key={s.id} className="flex h-14 items-center justify-center">
               <img
                 src={s.logoUrl}
                 alt={s.name}
-                className="max-h-full max-w-full object-contain drop-shadow-[0_2px_5px_rgba(42,33,64,0.28)]"
+                className={`max-h-full max-w-full object-contain ${
+                  s.id === "huak-huak" ? "rounded-xl bg-ink/75 p-1.5" : ""
+                }`}
                 draggable={false}
               />
             </div>

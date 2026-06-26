@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import jsQR from "jsqr";
 import { useUI } from "../i18n/lang";
 
@@ -9,7 +9,7 @@ interface ScannerProps {
   onClose: () => void;
 }
 
-type CamState = "starting" | "scanning" | "denied" | "error";
+type CamState = "starting" | "scanning" | "denied" | "error" | "success";
 
 // Camera-based QR scanning in-browser. getUserMedia + a per-frame jsQR decode.
 // No external scanner UI library — keeps the tree lean (CLAUDE.md).
@@ -22,6 +22,9 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const firedRef = useRef(false);
   const [state, setState] = useState<CamState>("starting");
+  // Bumping this re-runs the camera effect — used by the "try again" button so a
+  // user who initially blocked the camera can be re-prompted without reloading.
+  const [attempt, setAttempt] = useState(0);
   const ui = useUI();
 
   useEffect(() => {
@@ -70,7 +73,15 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
           const code = jsQR(img.data, w, h, { inversionAttempts: "dontInvert" });
           if (code && code.data) {
             firedRef.current = true;
-            onResult(code.data);
+            const payload = code.data;
+            // Hold a brief success beat so the scan feels acknowledged before
+            // the stamp animation takes over (≈1s).
+            cancelAnimationFrame(rafRef.current);
+            streamRef.current?.getTracks().forEach((t) => t.stop());
+            setState("success");
+            setTimeout(() => {
+              if (!cancelled) onResult(payload);
+            }, 1000);
             return;
           }
         }
@@ -78,6 +89,7 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
       rafRef.current = requestAnimationFrame(tick);
     }
 
+    firedRef.current = false;
     start();
 
     return () => {
@@ -85,8 +97,9 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
       cancelAnimationFrame(rafRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
+    // Re-runs whenever `attempt` changes (the "try again" button).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
 
   return createPortal(
     <motion.div
@@ -142,10 +155,46 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
           </div>
         )}
 
+        {/* Success beat — a springy check so the scan feels acknowledged */}
+        <AnimatePresence>
+          {state === "success" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink/40"
+            >
+              <motion.div
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className="ink-outline flex h-28 w-28 items-center justify-center rounded-full bg-lime"
+              >
+                <motion.svg
+                  viewBox="0 0 24 24"
+                  className="h-16 w-16 text-ink"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.4, delay: 0.15 }}
+                  aria-hidden
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </motion.svg>
+              </motion.div>
+              <p className="font-display text-2xl text-paper">{ui.scanner.success}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {(state === "starting" || state === "denied" || state === "error") && (
           // pointer-events-none so this full-screen status layer never swallows
           // taps meant for the close button (was the "can't exit when denied" bug).
-          // The Go-back button re-enables pointer events on itself.
+          // The action buttons re-enable pointer events on themselves.
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
             {state === "starting" && (
               <p className="font-display text-2xl text-paper">{ui.scanner.opening}</p>
@@ -166,13 +215,25 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
               </p>
             )}
             {(state === "denied" || state === "error") && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="pointer-events-auto ink-outline mt-2 rounded-full bg-paper px-6 py-2.5 font-display text-lg text-ink"
-              >
-                {ui.scanner.goBack}
-              </button>
+              <div className="pointer-events-auto mt-2 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setState("starting");
+                    setAttempt((a) => a + 1);
+                  }}
+                  className="ink-outline rounded-full bg-cyan px-6 py-2.5 font-display text-lg text-ink"
+                >
+                  {ui.scanner.tryAgain}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="font-display text-base text-paper/80 underline underline-offset-2"
+                >
+                  {ui.scanner.goBack}
+                </button>
+              </div>
             )}
           </div>
         )}
