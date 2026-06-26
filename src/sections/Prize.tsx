@@ -14,9 +14,10 @@ interface PrizeProps {
   username: string;
   durationSeconds: number;
   completedAt: number;
+  onReset: () => void;
 }
 
-export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
+export function Prize({ username, durationSeconds, completedAt, onReset }: PrizeProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   // Seed from a pure prop; the live clock updates from the effect below.
   const [now, setNow] = useState(completedAt);
@@ -125,6 +126,14 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
           {saving ? "…" : `📸 ${ui.prize.shareButton}`}
         </Button>
       </div>
+
+      {/* Subtle testing-phase reset (back to the username gate) */}
+      <button
+        onClick={onReset}
+        className="relative z-10 mt-5 font-body text-[11px] text-ink/40 underline underline-offset-2"
+      >
+        {ui.session.reset}
+      </button>
 
       {/* Off-screen full-res card for export. */}
       <div

@@ -32,6 +32,13 @@ export function MiniGame({ game }: MiniGameProps) {
     setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 2600);
   }
 
+  // Testing-phase escape hatch: wipe the session (username + progress) so a
+  // player can restart from the username gate. Also frees anyone wedged by a
+  // denied-camera state to begin again. Deliberately low-key.
+  function handleReset() {
+    if (window.confirm(ui.session.resetConfirm)) game.reset();
+  }
+
   function handleScanResult(text: string) {
     setScanning(false);
     const parsed = parseQrPayload(text);
@@ -71,6 +78,7 @@ export function MiniGame({ game }: MiniGameProps) {
         username={game.username}
         completedAt={game.completedAt}
         durationSeconds={Math.round((game.completedAt - game.startedAt) / 1000)}
+        onReset={handleReset}
       />
     );
   }
@@ -170,6 +178,16 @@ export function MiniGame({ game }: MiniGameProps) {
         </p>
         {/* one accent in the otherwise-bare lower area */}
         <Star className="w-12 shrink-0 opacity-80" color="#8CFF3D" />
+      </div>
+
+      {/* Subtle testing-phase reset (back to the username gate) */}
+      <div className="mx-auto mt-5 max-w-[360px] text-center">
+        <button
+          onClick={handleReset}
+          className="font-body text-[11px] text-ink/35 underline underline-offset-2"
+        >
+          {ui.session.reset}
+        </button>
       </div>
 
       {/* Hint bottom sheet */}

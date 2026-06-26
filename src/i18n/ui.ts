@@ -90,6 +90,7 @@ export interface UIStrings {
   };
   zones: Zones;
   lang: { label: string; en: string; zh: string };
+  session: { reset: string; resetConfirm: string };
 }
 
 export const UI: Record<Lang, UIStrings> = {
@@ -184,6 +185,11 @@ export const UI: Record<Lang, UIStrings> = {
       Nostalgia: "Nostalgia",
     },
     lang: { label: "Language", en: "EN", zh: "中" },
+    session: {
+      reset: "Reset session",
+      resetConfirm:
+        "Reset your session? This clears your username and stamp progress on this phone.",
+    },
   },
 
   zh: {
@@ -275,5 +281,9 @@ export const UI: Record<Lang, UIStrings> = {
       Nostalgia: "怀旧",
     },
     lang: { label: "语言", en: "EN", zh: "中" },
+    session: {
+      reset: "重置进度",
+      resetConfirm: "确定要重置进度吗？这会清除本机的用户名和集章进度。",
+    },
   },
 };

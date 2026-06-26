@@ -40,10 +40,34 @@ export type ParsedScan =
   | { ok: true; boothId: string }
   | { ok: false; reason: "foreign" | "invalid" };
 
-// Decode + verify a scanned string. Returns the booth id only if the token checks out.
+// Pull the raw payload out of a scanned string. The printed QR codes encode a
+// deep link (`https://site/?s=ILSP|b01|token`) so a phone's native camera can
+// open the app. The in-app scanner sees that whole URL, so unwrap the ?s= param
+// first; otherwise treat the text as a bare payload. Percent-decode if needed.
+function unwrapPayload(text: string): string {
+  let raw = text.trim();
+  if (/^https?:\/\//i.test(raw) || raw.includes("?s=") || raw.includes("&s=")) {
+    try {
+      const s = new URL(raw, "https://illuspeak.netlify.app").searchParams.get("s");
+      if (s) raw = s;
+    } catch {
+      /* not a parseable URL — fall through and use the raw text */
+    }
+  }
+  if (raw.includes("%")) {
+    try {
+      raw = decodeURIComponent(raw);
+    } catch {
+      /* leave as-is */
+    }
+  }
+  return raw.trim();
+}
+
+// Decode + verify a scanned string (bare payload OR deep-link URL). Returns the
+// booth id only if the token checks out.
 export function parseQrPayload(text: string): ParsedScan {
-  const trimmed = text.trim();
-  const parts = trimmed.split("|");
+  const parts = unwrapPayload(text).split("|");
   if (parts.length !== 3 || parts[0] !== QR_PREFIX) {
     return { ok: false, reason: "foreign" };
   }

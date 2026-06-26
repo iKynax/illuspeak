@@ -41,7 +41,7 @@ export default function App() {
     // Defer the collect + UI updates out of the effect body (no synchronous
     // setState in an effect) — runs once on mount.
     const timer = setTimeout(() => {
-      const parsed = parseQrPayload(decodeURIComponent(s));
+      const parsed = parseQrPayload(s);
       let message: string;
       let tone: ToastData["tone"];
       if (!parsed.ok) {
