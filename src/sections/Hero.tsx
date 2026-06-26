@@ -1,8 +1,9 @@
 import { motion } from "motion/react";
 import { Button } from "../components/Button";
 import { FloatingMascot } from "../components/FloatingMascot";
-import { eventInfo } from "../data/booths";
+import { eventInfo, loc } from "../data/booths";
 import { FloatingDoodle, Sparkle } from "../components/Doodles";
+import { useLang, useUI } from "../i18n/lang";
 
 interface HeroProps {
   onStart: () => void;
@@ -11,23 +12,25 @@ interface HeroProps {
 const PAGE_WASH = "#FFD6E8"; // soft pink the hero fades into at its bottom edge
 
 export function Hero({ onStart }: HeroProps) {
+  const { lang } = useLang();
+  const ui = useUI();
   return (
     <section className="relative flex min-h-[100svh] flex-col items-center overflow-hidden px-5 pb-10 pt-10 text-center">
       {/* ---- Layered backdrop: photo -> blue-pink duotone -> halftone dots ----
           All pinned to -z-10 so the scroll-driven rainbow spine can weave OVER
           the wash while staying behind the content. Mirrors the About page's
           pastel, dotted treatment so the two sections feel consistent. */}
-      {/* 1. KL street photo, kept as soft texture (no longer black-and-white) */}
+      {/* 1. Illustrated hero backdrop (the event key-visual scene) */}
       <img
         src="/assets/hero-backdrop.webp"
         alt=""
         aria-hidden
         draggable={false}
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover object-[center_62%] [filter:saturate(0.9)_brightness(1.05)]"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover object-[center_30%]"
       />
-      {/* 2. Blue->pink pastel wash so the photo reads as a soft duotone, like About */}
+      {/* 2. Light pastel wash for brand cohesion — kept low so the art reads */}
       <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.72]"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-25"
         style={{ background: "linear-gradient(135deg, #BFE6FF, #FFD6E8)" }}
       />
       {/* 3. Bottom fade so the backdrop dissolves into the page wash */}
@@ -35,8 +38,8 @@ export function Hero({ onStart }: HeroProps) {
         className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-2/5"
         style={{ background: `linear-gradient(to bottom, transparent, ${PAGE_WASH})` }}
       />
-      {/* 4. Halftone dots, matched to the About section's texture (opacity-60) */}
-      <div className="halftone pointer-events-none absolute inset-0 -z-10 opacity-60" />
+      {/* 4. Subtle halftone texture */}
+      <div className="halftone pointer-events-none absolute inset-0 -z-10 opacity-30" />
 
       {/* 5. Rainbow streak arcing behind the wordmark */}
       <motion.img
@@ -87,10 +90,10 @@ export function Hero({ onStart }: HeroProps) {
         className="ink-outline shadow-sticker relative z-10 mt-3 rotate-[-2deg] rounded-2xl bg-lemon px-5 py-2"
       >
         <p className="font-display text-2xl leading-none text-ink">
-          {eventInfo.dates}
+          {loc(eventInfo.dates, lang)}
         </p>
         <p className="font-body text-sm font-semibold text-ink">
-          {eventInfo.venue}
+          {loc(eventInfo.venue, lang)}
         </p>
       </motion.div>
 
@@ -101,7 +104,7 @@ export function Hero({ onStart }: HeroProps) {
         transition={{ delay: 0.5 }}
         className="relative z-10 mt-5 max-w-[300px] rounded-2xl bg-paper/70 px-4 py-2 font-body text-base font-semibold text-ink backdrop-blur-[2px]"
       >
-        {eventInfo.tagline}
+        {loc(eventInfo.tagline, lang)}
       </motion.p>
 
       {/* CTA */}
@@ -112,7 +115,7 @@ export function Hero({ onStart }: HeroProps) {
         className="relative z-10 mt-auto pt-8"
       >
         <Button onClick={onStart} variant="primary" className="text-xl">
-          Start the hunt →
+          {ui.hero.start}
         </Button>
       </motion.div>
 

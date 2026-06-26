@@ -1,9 +1,10 @@
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import type { Booth } from "../data/booths";
+import { loc, type Booth } from "../data/booths";
 import { stampVisual } from "./stamps";
 import { Button } from "../components/Button";
 import { makeQrPayload } from "../lib/qr";
+import { useLang, useUI } from "../i18n/lang";
 
 interface HintSheetProps {
   booth: Booth;
@@ -26,6 +27,8 @@ export function HintSheet({
   onDevScan,
 }: HintSheetProps) {
   const v = stampVisual(booth.id);
+  const { lang } = useLang();
+  const ui = useUI();
 
   return createPortal(
     <>
@@ -62,10 +65,10 @@ export function HintSheet({
             </span>
             <div>
               <p className="font-display text-xl leading-tight text-ink">
-                Stamp #{index + 1}
+                {ui.hint.stampN(index + 1)}
               </p>
               <p className="font-body text-sm font-semibold text-ink/60">
-                {collected ? "Collected ✓" : "Not collected yet"}
+                {collected ? ui.hint.collected : ui.hint.notCollected}
               </p>
             </div>
           </div>
@@ -74,14 +77,14 @@ export function HintSheet({
             <div className="mt-4 space-y-3">
               <div className="ink-outline rounded-2xl bg-lemon/60 px-4 py-3">
                 <p className="font-display text-sm uppercase tracking-wide text-ink/70">
-                  Find it
+                  {ui.hint.findIt}
                 </p>
                 <p className="font-body text-[15px] text-ink">
-                  {booth.game.hint}
+                  {loc(booth.game.hint, lang)}
                 </p>
               </div>
               <p className="px-1 font-body text-sm text-ink/80">
-                {booth.game.info}
+                {loc(booth.game.info, lang)}
               </p>
             </div>
           )}
@@ -89,11 +92,11 @@ export function HintSheet({
           <div className="mt-5 flex gap-3">
             {collected ? (
               <Button variant="secondary" className="flex-1" onClick={onClose}>
-                Nice, done!
+                {ui.hint.doneButton}
               </Button>
             ) : (
               <Button variant="primary" className="flex-1" onClick={onScan}>
-                📷 Scan to collect
+                {ui.hint.scanButton}
               </Button>
             )}
           </div>

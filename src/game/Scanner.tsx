@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import jsQR from "jsqr";
+import { useUI } from "../i18n/lang";
 
 interface ScannerProps {
   onResult: (text: string) => void;
@@ -21,6 +22,7 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const firedRef = useRef(false);
   const [state, setState] = useState<CamState>("starting");
+  const ui = useUI();
 
   useEffect(() => {
     let cancelled = false;
@@ -102,13 +104,16 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
         />
         <canvas ref={canvasRef} className="hidden" />
 
-        {/* Close button — top-right, same spot as the game PlayButton */}
+        {/* Close button — top-right, same spot as the game PlayButton.
+            z-20 keeps it tappable ABOVE the status overlay (which is now
+            pointer-events-none) so the user can always exit, even when camera
+            permission was denied. */}
         <motion.button
           type="button"
           onClick={onClose}
           aria-label="Close camera"
           whileTap={{ scale: 0.9 }}
-          className="absolute right-4 top-4 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-paper/30 bg-ink/60 text-paper backdrop-blur-sm"
+          className="absolute right-4 top-4 z-20 flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-paper/30 bg-ink/60 text-paper backdrop-blur-sm"
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <svg
@@ -138,25 +143,36 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
         )}
 
         {(state === "starting" || state === "denied" || state === "error") && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
+          // pointer-events-none so this full-screen status layer never swallows
+          // taps meant for the close button (was the "can't exit when denied" bug).
+          // The Go-back button re-enables pointer events on itself.
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
             {state === "starting" && (
-              <p className="font-display text-2xl text-paper">Opening camera…</p>
+              <p className="font-display text-2xl text-paper">{ui.scanner.opening}</p>
             )}
             {state === "denied" && (
               <>
                 <p className="font-display text-2xl text-paper">
-                  Camera permission needed
+                  {ui.scanner.deniedTitle}
                 </p>
                 <p className="max-w-xs font-body text-sm text-paper/80">
-                  Allow camera access in your browser settings, then tap Scan
-                  again to collect this stamp.
+                  {ui.scanner.deniedBody}
                 </p>
               </>
             )}
             {state === "error" && (
               <p className="max-w-xs font-display text-xl text-paper">
-                Couldn't start the camera on this device.
+                {ui.scanner.error}
               </p>
+            )}
+            {(state === "denied" || state === "error") && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="pointer-events-auto ink-outline mt-2 rounded-full bg-paper px-6 py-2.5 font-display text-lg text-ink"
+              >
+                {ui.scanner.goBack}
+              </button>
             )}
           </div>
         )}
@@ -164,9 +180,7 @@ export function Scanner({ onResult, onClose }: ScannerProps) {
 
       {/* Bottom helper text */}
       <div className="pb-safe flex items-center justify-center bg-ink px-5 py-4">
-        <p className="font-body text-sm text-paper/80">
-          Point at an Illuspeak stamp QR code.
-        </p>
+        <p className="font-body text-sm text-paper/80">{ui.scanner.aim}</p>
       </div>
     </motion.div>,
     document.body,

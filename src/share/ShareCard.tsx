@@ -1,20 +1,23 @@
 import { forwardRef } from "react";
-import { gameTargets } from "../data/booths";
+import { gameTargets, eventInfo, loc } from "../data/booths";
 import { stampVisual } from "../game/stamps";
 import { formatDuration } from "../lib/format";
-import { eventInfo } from "../data/booths";
+import { UI, type Lang } from "../i18n/ui";
 
 export interface ShareCardData {
   username: string;
   durationSeconds: number;
   rank?: number | null;
+  lang?: Lang;
 }
 
 // The 1080x1920 Instagram-story card. Rendered off-screen at full size and
 // captured to PNG via html-to-image. Composites the real key-visual identity:
-// wordmark + bear + the 6 collected stamps.
+// wordmark + victory creature + the 6 collected stamps. Reads strings directly
+// from the UI dict (it runs off-DOM, so the active lang is passed in as a prop).
 export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
-  function ShareCard({ username, durationSeconds, rank }, ref) {
+  function ShareCard({ username, durationSeconds, rank, lang = "en" }, ref) {
+    const t = UI[lang].prize;
     return (
       <div
         ref={ref}
@@ -61,7 +64,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
             boxShadow: "8px 8px 0 #2A2140",
           }}
         >
-          RALLY COMPLETE!
+          {t.rallyComplete}
         </p>
 
         <img
@@ -126,8 +129,8 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
             gap: 28,
           }}
         >
-          <Stat label="TIME" value={formatDuration(durationSeconds)} bg="#2BE3F2" />
-          {rank != null && <Stat label="FINISHER" value={`#${rank}`} bg="#8CFF3D" />}
+          <Stat label={t.statTime} value={formatDuration(durationSeconds)} bg="#2BE3F2" />
+          {rank != null && <Stat label={t.statFinisher} value={`#${rank}`} bg="#8CFF3D" />}
         </div>
 
         <p
@@ -139,7 +142,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
             opacity: 0.85,
           }}
         >
-          {eventInfo.dates} · {eventInfo.venue}
+          {loc(eventInfo.dates, lang)} · {loc(eventInfo.venue, lang)}
         </p>
       </div>
     );

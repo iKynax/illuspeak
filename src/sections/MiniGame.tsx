@@ -11,6 +11,7 @@ import { Prize } from "./Prize";
 import { Toast, type ToastData } from "../components/Toast";
 import { FloatingMascot } from "../components/FloatingMascot";
 import { Burst, Star } from "../components/Doodles";
+import { useUI } from "../i18n/lang";
 
 interface MiniGameProps {
   game: Game;
@@ -23,6 +24,7 @@ export function MiniGame({ game }: MiniGameProps) {
   const [scanning, setScanning] = useState(false);
   const [justCollectedId, setJustCollectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastData | null>(null);
+  const ui = useUI();
 
   function showToast(message: string, tone: ToastData["tone"]) {
     const id = ++toastSeq;
@@ -35,22 +37,20 @@ export function MiniGame({ game }: MiniGameProps) {
     const parsed = parseQrPayload(text);
     if (!parsed.ok) {
       showToast(
-        parsed.reason === "foreign"
-          ? "That's not an Illuspeak stamp 🤔"
-          : "That stamp didn't check out 🚫",
+        parsed.reason === "foreign" ? ui.game.toastForeign : ui.game.toastInvalid,
         "bad",
       );
       return;
     }
     const result = game.collect(parsed.boothId);
     if (result.status === "duplicate") {
-      showToast("You already got this one! ✨", "info");
+      showToast(ui.game.toastDuplicate, "info");
     } else if (result.status === "not-a-target") {
-      showToast("Cool booth — but not a stamp target!", "info");
+      showToast(ui.game.toastNotTarget, "info");
     } else {
       setJustCollectedId(result.boothId);
       setSelectedId(null);
-      showToast("Stamp collected! 🎉", "good");
+      showToast(ui.game.toastCollected, "good");
       setTimeout(() => setJustCollectedId(null), 1200);
     }
   }
@@ -102,9 +102,9 @@ export function MiniGame({ game }: MiniGameProps) {
           className="pointer-events-none absolute left-1/2 top-1/2 -z-0 w-40 -translate-x-1/2 -translate-y-1/2 opacity-50"
           color="#FFE53D"
         />
-        <h2 className="relative font-display text-3xl text-ink">Stamp Rally</h2>
+        <h2 className="relative font-display text-3xl text-ink">{ui.game.title}</h2>
         <p className="relative mt-1 font-body text-sm font-semibold text-ink/70">
-          Find all 6 stamps around L5. Tap a box for a clue.
+          {ui.game.subtitle}
         </p>
       </header>
 
@@ -140,21 +140,17 @@ export function MiniGame({ game }: MiniGameProps) {
       {/* Encouragement / status — fills the section so it never reads empty */}
       <div className="mx-auto mt-6 max-w-[360px] text-center">
         <p className="font-display text-lg text-ink">
-          {remaining === 0
-            ? "All stamps found! 🎉"
-            : `${remaining} stamp${remaining === 1 ? "" : "s"} to go!`}
+          {remaining === 0 ? ui.game.allFound : ui.game.toGo(remaining)}
         </p>
-        <p className="mt-1 font-body text-sm text-ink/70">
-          Wander the floor, find the QR at each spot, and scan to collect.
-        </p>
+        <p className="mt-1 font-body text-sm text-ink/70">{ui.game.wander}</p>
       </div>
 
       {/* How it works strip */}
       <div className="mx-auto mt-6 grid max-w-[360px] grid-cols-3 gap-3">
         {[
-          { icon: "👀", label: "Tap a box for a clue" },
-          { icon: "📷", label: "Scan the booth's QR" },
-          { icon: "⭐", label: "Collect all 6 → prize" },
+          { icon: "👀", label: ui.game.howTap },
+          { icon: "📷", label: ui.game.howScan },
+          { icon: "⭐", label: ui.game.howCollect },
         ].map((s) => (
           <div
             key={s.label}
@@ -170,7 +166,7 @@ export function MiniGame({ game }: MiniGameProps) {
 
       <div className="relative mx-auto mt-8 flex max-w-[360px] items-end justify-between">
         <p className="max-w-[200px] font-body text-xs text-ink/50">
-          Progress is saved on this phone and works fully offline.
+          {ui.game.offline}
         </p>
         {/* one accent in the otherwise-bare lower area */}
         <Star className="w-12 shrink-0 opacity-80" color="#8CFF3D" />

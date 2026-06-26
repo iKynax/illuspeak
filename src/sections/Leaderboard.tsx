@@ -6,12 +6,14 @@ import {
 } from "../lib/supabase";
 import { formatDuration } from "../lib/format";
 import { Star } from "../components/Doodles";
+import { useUI } from "../i18n/lang";
 
 // Live leaderboard widget (PRD §5.3). Pure decoration — renders nothing
 // disruptive if Supabase is unconfigured or offline.
 export function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const ui = useUI();
 
   useEffect(() => {
     if (!leaderboardEnabled) return;
@@ -32,18 +34,18 @@ export function Leaderboard() {
   return (
     <div>
       <h2 className="mt-8 flex items-center gap-2 font-display text-2xl text-ink">
-        <Star className="h-6 w-6" color="#FFE53D" /> Fastest finishers
+        <Star className="h-6 w-6" color="#FFE53D" /> {ui.leaderboard.title}
       </h2>
 
       <div className="ink-outline mt-3 overflow-hidden rounded-2xl bg-paper">
         {!loaded && (
           <p className="px-4 py-5 text-center font-body text-sm text-ink/50">
-            Loading…
+            {ui.leaderboard.loading}
           </p>
         )}
         {loaded && (!entries || entries.length === 0) && (
           <p className="px-4 py-5 text-center font-body text-sm text-ink/60">
-            No finishers yet — be the first! 🏁
+            {ui.leaderboard.empty}
           </p>
         )}
         {loaded &&

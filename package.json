@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "assets": "node scripts/process-assets.mjs",
+    "logos": "node scripts/process-logos.mjs",
     "qr": "node --experimental-strip-types scripts/generate-qr.mjs"
   },
   "dependencies": {

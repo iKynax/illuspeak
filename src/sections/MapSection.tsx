@@ -6,12 +6,14 @@ import { BoothSheet } from "./BoothSheet";
 import { stampVisual } from "../game/stamps";
 import { FloatingMascot } from "../components/FloatingMascot";
 import { Squiggle, Star } from "../components/Doodles";
+import { useUI } from "../i18n/lang";
 
 // Interactive booth map (PRD §5.2). Real GMBB L5 floor plan as the base layer
 // (swap for the illustrated version later), pinch/pan via react-zoom-pan-pinch,
 // tappable pins, bottom-sheet booth detail.
 export function MapSection() {
   const [selected, setSelected] = useState<Booth | null>(null);
+  const ui = useUI();
 
   return (
     <section className="relative overflow-hidden bg-lilac/50 px-5 pb-12 pt-12">
@@ -32,9 +34,9 @@ export function MapSection() {
       />
 
       <header className="relative text-center">
-        <h2 className="font-display text-3xl text-ink">Booth Map</h2>
+        <h2 className="font-display text-3xl text-ink">{ui.map.title}</h2>
         <p className="mt-1 font-body text-sm font-semibold text-ink/70">
-          GMBB Level 5. Pinch to zoom, drag to pan, tap a pin.
+          {ui.map.instructions}
         </p>
       </header>
 
@@ -70,11 +72,11 @@ export function MapSection() {
 
       <div className="mt-4 flex items-center justify-center gap-4 font-body text-xs font-semibold text-ink/70">
         <span className="flex items-center gap-1">
-          <Star className="h-4 w-4" color="#FFE53D" /> stamp target
+          <Star className="h-4 w-4" color="#FFE53D" /> {ui.map.legendTarget}
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded-full border-2 border-ink bg-hotpink" />{" "}
-          booth
+          {ui.map.legendBooth}
         </span>
       </div>
 

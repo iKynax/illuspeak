@@ -8,6 +8,7 @@ import { submitCompletion } from "../lib/supabase";
 import { formatAgo, formatDuration } from "../lib/format";
 import { FloatingMascot } from "../components/FloatingMascot";
 import { FloatingDoodle, Sparkle, Star } from "../components/Doodles";
+import { useLang, useUI } from "../i18n/lang";
 
 interface PrizeProps {
   username: string;
@@ -21,6 +22,8 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
   const [now, setNow] = useState(completedAt);
   const [saving, setSaving] = useState(false);
   const [rank, setRank] = useState<number | null>(null);
+  const { lang } = useLang();
+  const ui = useUI();
 
   // Live ticking element — a recycled screenshot looks obviously stale next to
   // this. Low-stakes anti-reuse touch (PRD §5.3).
@@ -82,11 +85,13 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
         transition={{ delay: 0.2 }}
         className="relative z-10 mt-3 font-display text-4xl text-ink"
       >
-        Prize unlocked!
+        {ui.prize.unlocked}
       </motion.h1>
 
       <p className="relative z-10 mt-1 font-body text-base font-semibold text-ink/80">
-        Nice work, <span className="text-hotpink">{username}</span> — all 6 stamps.
+        {ui.prize.niceBefore}
+        <span className="text-hotpink">{username}</span>
+        {ui.prize.niceAfter}
       </p>
 
       <div className="relative z-10 mt-5 flex gap-3">
@@ -95,19 +100,19 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
         </span>
         {rank != null && (
           <span className="ink-outline shadow-sticker rounded-2xl bg-lime px-4 py-2 font-display text-ink">
-            #{rank} to finish
+            {ui.prize.finisher(rank)}
           </span>
         )}
       </div>
 
       <div className="ink-outline relative z-10 mt-6 max-w-[320px] rounded-2xl bg-paper/90 px-5 py-4">
-        <p className="font-display text-lg text-ink">Show this screen to staff</p>
+        <p className="font-display text-lg text-ink">{ui.prize.showStaff}</p>
         <p className="mt-1 font-body text-sm text-ink/70">
-          They’ll hand over your prize. This page is live — unlocked{" "}
+          {ui.prize.handOverBefore}
           <span className="font-semibold text-hotpink">
             {formatAgo(completedAt, now)}
           </span>
-          .
+          {ui.prize.handOverAfter}
         </p>
         {/* live tick so a screenshot looks stale */}
         <p className="mt-1 font-body text-xs tabular-nums text-ink/40">
@@ -117,7 +122,7 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
 
       <div className="relative z-10 mt-6">
         <Button variant="primary" onClick={handleSave} disabled={saving} className="text-lg">
-          {saving ? "Saving…" : "📸 Save my card"}
+          {saving ? "…" : `📸 ${ui.prize.shareButton}`}
         </Button>
       </div>
 
@@ -131,6 +136,7 @@ export function Prize({ username, durationSeconds, completedAt }: PrizeProps) {
           username={username}
           durationSeconds={durationSeconds}
           rank={rank}
+          lang={lang}
         />
       </div>
     </div>

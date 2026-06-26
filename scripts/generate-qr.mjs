@@ -3,35 +3,53 @@
 // Imports the REAL game data + token logic (via Node type-stripping) so the
 // printed codes always match what the app verifies — no drift.
 //
-// Run: npm run qr
+// Each QR encodes a NATIVE-CAMERA DEEP LINK:
+//   <SITE_URL>/?s=<encodeURIComponent(payload)>
+// Scanning with the phone's normal camera opens the live site, which reads ?s=,
+// verifies the token, and auto-collects that stamp (order-independent). The
+// in-app scanner still works because the same payload is embedded in the URL.
+//
+// Run:  SITE_URL=https://illuspeak.netlify.app npm run qr
 // Output: qr/stamp-<id>.png  +  qr/print-sheet.html (open & print)
 
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import QRCode from "qrcode";
-import { gameTargets } from "../src/data/booths.ts";
+import { gameTargets, loc } from "../src/data/booths.ts";
 import { makeQrPayload } from "../src/lib/qr.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.resolve(__dirname, "..", "qr");
 
+// Where the deployed app lives. Override per environment.
+const SITE_URL = (process.env.SITE_URL || "https://illuspeak.netlify.app").replace(
+  /\/+$/,
+  "",
+);
+
+function deepLink(boothId) {
+  return `${SITE_URL}/?s=${encodeURIComponent(makeQrPayload(boothId))}`;
+}
+
 async function main() {
   await mkdir(OUT, { recursive: true });
+  console.log(`Site URL: ${SITE_URL}\n`);
 
   const cards = [];
   for (let i = 0; i < gameTargets.length; i++) {
     const booth = gameTargets[i];
-    const payload = makeQrPayload(booth.id);
+    const payload = deepLink(booth.id);
     const file = `stamp-${booth.id}.png`;
     await QRCode.toFile(path.join(OUT, file), payload, {
       width: 800,
       margin: 2,
       color: { dark: "#2A2140", light: "#FFFFFF" },
     });
-    cards.push({ n: i + 1, booth, payload, file });
-    console.log(`#${i + 1} ${booth.name} (${booth.id}) -> qr/${file}`);
-    console.log(`     payload: ${payload}`);
+    const name = loc(booth.name, "en");
+    cards.push({ n: i + 1, booth, name, hint: booth.game ? loc(booth.game.hint, "en") : "", payload, file });
+    console.log(`#${i + 1} ${name} (${booth.id}) -> qr/${file}`);
+    console.log(`     url: ${payload}`);
   }
 
   // Printable contact sheet.
@@ -54,8 +72,8 @@ ${cards
   .map(
     (c) => `  <div class="card">
     <img src="${c.file}" alt="">
-    <div class="name">#${c.n} · ${c.booth.name}</div>
-    <div class="hint">${c.booth.game?.hint ?? ""}</div>
+    <div class="name">#${c.n} · ${c.name}</div>
+    <div class="hint">${c.hint}</div>
   </div>`,
   )
   .join("\n")}

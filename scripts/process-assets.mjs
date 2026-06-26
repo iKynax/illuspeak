@@ -1,77 +1,77 @@
 // One-time asset pipeline: turn the raw event art into web-ready files.
 //
-// The raw character/wordmark art (in /assets) ships as flat JPEGs with a baked-in
-// fake-transparency checkerboard. JPEG has no alpha, so we run AI background removal
-// to recover true transparency, then trim + resize + encode to WebP.
-// The map and posters are already real PNGs, so we just copy them.
+// The new hand-drawn art (in /NewAssets) already ships as true-alpha PNGs, so it
+// only needs trim + resize + WebP encode. We deliberately reuse the SAME output
+// filenames the app already references, so swapping the art needs no code changes.
+// The one retained legacy asset (rainbow-streak) is still a flat JPEG with a baked
+// checkerboard, so it keeps the flood-fill background removal. The map is copied.
 //
 // Run: npm run assets
 
-import { readdir, mkdir, copyFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { readdir, mkdir, copyFile, writeFile, rm } from "node:fs/promises";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const SRC = path.join(ROOT, "assets");
+const NEW = path.join(ROOT, "NewAssets"); // new hand-drawn art (true alpha)
+const LEGACY = path.join(ROOT, "assets"); // retained legacy raw art
 const OUT = path.join(ROOT, "public", "assets");
 
-// Characters/wordmark/critters -> remove the fake-transparency checkerboard,
-// output transparent WebP. Source files now have clean descriptive names
-// (renamed in STEP 0), so the output base name just mirrors the source.
-const CHARACTERS = [
-  { src: "wordmark.jpeg", out: "wordmark.webp", maxWidth: 1200 },
-  { src: "mascot-paintbrush-kid.jpeg", out: "mascot-paintbrush-kid.webp", maxWidth: 900 },
-  { src: "mascot-ghost.jpeg", out: "mascot-ghost.webp", maxWidth: 700 },
-  { src: "mascot-bear.jpeg", out: "mascot-bear.webp", maxWidth: 1000 },
-  { src: "mascot-surfer.jpeg", out: "mascot-surfer.webp", maxWidth: 600 },
+// True-alpha PNGs -> trim transparent margins, resize, encode WebP.
+// Output names mirror what the code already imports (see /src), so most swaps
+// are zero-code. Decorative critter assignments are chosen from the new pool.
+const ALPHA = [
+  // --- Mandated swaps ---
+  { src: "Tittle 2.png", out: "wordmark.webp", maxWidth: 1200 }, // landing logo
+  { src: "Mascot.png", out: "mascot-paintbrush-kid.webp", maxWidth: 900 }, // hero mascot
+  { src: "1 2.png", out: "mascot-bear.webp", maxWidth: 900 }, // victory creature
+  // --- Floating critters / corner characters (reused filenames) ---
+  { src: "Lizard_thing_.png", out: "mascot-ghost.webp", maxWidth: 700 },
+  { src: "Pink_Color_Guy.png", out: "mascot-surfer.webp", maxWidth: 600 },
+  { src: "3_Cat.png", out: "corner-cats-topleft.webp", maxWidth: 700 },
+  { src: "mascot 2.png", out: "corner-bear-bottomright.webp", maxWidth: 700 },
+  { src: "6.png", out: "cats-cluster-railing.webp", maxWidth: 800 },
+  { src: "Bird.png", out: "critter-snail-pink.webp", maxWidth: 500 },
+  { src: "5.png", out: "critter-snail-orange.webp", maxWidth: 500 },
+  { src: "7.png", out: "critter-snail-cutie.webp", maxWidth: 500 },
+  { src: "4.png", out: "critter-bird-pencil.webp", maxWidth: 500 },
+  { src: "10.png", out: "critter-cat-lime.webp", maxWidth: 500 },
+  // --- New decorative stars + final-poster tile background ---
+  { src: "Star 1.PNG", out: "star-1.webp", maxWidth: 400 },
+  { src: "Star 2.PNG", out: "star-2.webp", maxWidth: 400 },
+  { src: "Star 3.PNG", out: "star-3.webp", maxWidth: 400 },
+  { src: "Star 4.PNG", out: "star-4.webp", maxWidth: 400 },
+  { src: "Final Poster.png", out: "poster-final.webp", maxWidth: 700 },
+];
+
+// Large illustrated backdrops -> resize hard + encode (sources are 40-61 MB).
+const BACKDROPS = [
+  { src: "Background.PNG", out: "hero-backdrop.webp", maxWidth: 1200 },
+  { src: "Clouds.PNG", out: "clouds.webp", maxWidth: 1200 },
+];
+
+// Retained legacy JPEG with a baked checkerboard -> flood-fill removal.
+const LEGACY_KEYED = [
   { src: "rainbow-streak.jpeg", out: "rainbow-streak.webp", maxWidth: 1000 },
-  { src: "corner-cats-topleft.jpeg", out: "corner-cats-topleft.webp", maxWidth: 700 },
-  { src: "corner-bear-bottomright.jpeg", out: "corner-bear-bottomright.webp", maxWidth: 700 },
-  { src: "cats-cluster-railing.jpeg", out: "cats-cluster-railing.webp", maxWidth: 800 },
-  // Scattered critters (the floating accents).
-  { src: "critter-snail-pink.jpeg", out: "critter-snail-pink.webp", maxWidth: 500 },
-  { src: "critter-snail-orange.jpeg", out: "critter-snail-orange.webp", maxWidth: 500 },
-  { src: "critter-snail-cutie.jpeg", out: "critter-snail-cutie.webp", maxWidth: 500 },
-  { src: "critter-bird-pencil.jpeg", out: "critter-bird-pencil.webp", maxWidth: 500 },
-  { src: "critter-cat-lime.jpeg", out: "critter-cat-lime.webp", maxWidth: 500 },
 ];
 
-// Real photographs -> NO background removal (they have no checkerboard, and the
-// flood-fill would eat the sky). Just resize + encode. The hero applies its
-// duotone/grayscale treatment in CSS, not baked into the asset.
-const PHOTOS = [
-  { src: "hero-backdrop.jpeg", out: "hero-backdrop.webp", maxWidth: 1080 },
-];
+// Already-clean PNG -> straight copy.
+const COPIES = [{ src: "Map.png", out: "floorplan.png" }];
 
-// Already-clean PNGs -> straight copy.
-const COPIES = [
-  { src: "Map.png", out: "floorplan.png" },
-  { src: "Poster1.png", out: "poster-1.png" },
-  { src: "Poster2.png", out: "poster-2.png" },
-  { src: "Poster3.png", out: "poster-3.png" },
-];
-
-// Per-pixel chroma (saturation proxy). The checkerboard background is gray
-// (R~=G~=B -> low chroma); every character is vibrant (high chroma).
+// --- Flood-fill checkerboard removal (legacy rainbow only) ---
 function chroma(r, g, b) {
   return Math.max(r, g, b) - Math.min(r, g, b);
 }
 
-// Flood-fill from the image border through "background-like" gray pixels and
-// knock out their alpha. Stops at the bold colored outlines, so interior whites
-// (gloves, eyes) are preserved because the fill can't reach them.
 function keyOutCheckerboard(data, width, height, chromaThreshold) {
   const n = width * height;
-  const bg = new Uint8Array(n); // 1 = background
+  const bg = new Uint8Array(n);
   const stack = [];
-
   const isGray = (i) =>
     chroma(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]) < chromaThreshold;
-
-  // Seed from every border pixel that looks like background.
   const pushIf = (x, y) => {
     if (x < 0 || y < 0 || x >= width || y >= height) return;
     const i = y * width + x;
@@ -88,8 +88,6 @@ function keyOutCheckerboard(data, width, height, chromaThreshold) {
     pushIf(0, y);
     pushIf(width - 1, y);
   }
-
-  // 4-connected flood fill.
   while (stack.length) {
     const i = stack.pop();
     const x = i % width;
@@ -99,20 +97,9 @@ function keyOutCheckerboard(data, width, height, chromaThreshold) {
     if (y > 0) pushIf(x, y - 1);
     if (y < height - 1) pushIf(x, y + 1);
   }
-
-  // Second pass: trapped checkerboard pockets the border fill can't reach
-  // (e.g. gaps between railing bars). The checkerboard is gray ~177 + white 255;
-  // pure white is ambiguous with gloves, but the GRAY 177 is unique to the
-  // background. So we seed ONLY from mid-gray pixels and flood through the whole
-  // connected gray+white pocket. The dark ink outlines (low luminance) wall it
-  // off, so foreground whites are never reached.
-  const lum = (i) =>
-    (data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2]) / 3;
-  // traversable = light, low-chroma (gray or white), and not already bg
+  const lum = (i) => (data[i * 4] + data[i * 4 + 1] + data[i * 4 + 2]) / 3;
   const passable = (i) => !bg[i] && isGray(i) && lum(i) > 150;
-  // seed = specifically the checkerboard's mid-gray (not white, not ink)
   const isSeedGray = (i) => isGray(i) && lum(i) > 150 && lum(i) < 210;
-
   const pocket = (start) => {
     const s = [start];
     bg[start] = 1;
@@ -134,22 +121,24 @@ function keyOutCheckerboard(data, width, height, chromaThreshold) {
       tryN(x, y + 1);
     }
   };
-  for (let i = 0; i < n; i++) {
-    if (isSeedGray(i)) pocket(i);
-  }
-
-  // Knock out background alpha.
-  for (let i = 0; i < n; i++) {
-    if (bg[i]) data[i * 4 + 3] = 0;
-  }
+  for (let i = 0; i < n; i++) if (isSeedGray(i)) pocket(i);
+  for (let i = 0; i < n; i++) if (bg[i]) data[i * 4 + 3] = 0;
   return bg;
 }
 
-// Photos: resize + encode only, keep the pixels intact.
-async function resizeAndEncode(srcPath, outPath, maxWidth) {
+// --- Encoders ---
+async function trimResizeEncode(srcPath, outPath, maxWidth, quality = 82) {
+  await sharp(srcPath)
+    .trim() // crop away the big transparent artboard margins
+    .resize({ width: maxWidth, withoutEnlargement: true })
+    .webp({ quality, effort: 5 })
+    .toFile(outPath);
+}
+
+async function resizeEncode(srcPath, outPath, maxWidth, quality = 78) {
   await sharp(srcPath)
     .resize({ width: maxWidth, withoutEnlargement: true })
-    .webp({ quality: 80, effort: 5 })
+    .webp({ quality, effort: 5 })
     .toFile(outPath);
 }
 
@@ -158,62 +147,48 @@ async function removeAndEncode(srcPath, outPath, maxWidth) {
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
-
   keyOutCheckerboard(data, info.width, info.height, 30);
-
   await sharp(data, {
     raw: { width: info.width, height: info.height, channels: 4 },
   })
-    .trim() // crop away fully-transparent margins
+    .trim()
     .resize({ width: maxWidth, withoutEnlargement: true })
     .webp({ quality: 82, effort: 5 })
     .toFile(outPath);
 }
 
+async function run(group, dir, encoder, label) {
+  for (const { src, out, maxWidth } of group) {
+    const srcPath = path.join(dir, src);
+    if (!existsSync(srcPath)) {
+      console.warn(`! no source for ${out} (${src}) — skipped`);
+      continue;
+    }
+    try {
+      console.log(`~ ${src} -> ${out} (${label})`);
+      await encoder(srcPath, path.join(OUT, out), maxWidth);
+      console.log(`  done ${out}`);
+    } catch (err) {
+      console.error(`  FAILED ${out}:`, err.message);
+    }
+  }
+}
+
 async function main() {
-  if (!existsSync(SRC)) {
-    console.error(`Source folder not found: ${SRC}`);
-    process.exit(1);
-  }
+  // Refresh top-level files so stale, no-longer-used assets don't linger, but
+  // keep subdirectories (sponsors/, org/) produced by the logo pipeline.
   await mkdir(OUT, { recursive: true });
-
-  // 1. Characters / wordmark / critters -> background removed
-  for (const { src, out, maxWidth } of CHARACTERS) {
-    const srcPath = path.join(SRC, src);
-    if (!existsSync(srcPath)) {
-      console.warn(`! no source for ${out} (${src}) — skipped`);
-      continue;
-    }
-    const outPath = path.join(OUT, out);
-    try {
-      console.log(`~ ${src} -> ${out} (removing background)`);
-      await removeAndEncode(srcPath, outPath, maxWidth);
-      console.log(`  done ${out}`);
-    } catch (err) {
-      console.error(`  FAILED ${out}:`, err.message);
-    }
+  for (const entry of await readdir(OUT)) {
+    const p = path.join(OUT, entry);
+    if (statSync(p).isFile()) await rm(p, { force: true });
   }
 
-  // 2. Photos -> resize + encode only (no background removal)
-  for (const { src, out, maxWidth } of PHOTOS) {
-    const srcPath = path.join(SRC, src);
-    if (!existsSync(srcPath)) {
-      console.warn(`! no source for ${out} (${src}) — skipped`);
-      continue;
-    }
-    const outPath = path.join(OUT, out);
-    try {
-      console.log(`~ ${src} -> ${out} (photo, resize only)`);
-      await resizeAndEncode(srcPath, outPath, maxWidth);
-      console.log(`  done ${out}`);
-    } catch (err) {
-      console.error(`  FAILED ${out}:`, err.message);
-    }
-  }
+  await run(ALPHA, NEW, (s, o, w) => trimResizeEncode(s, o, w), "alpha trim");
+  await run(BACKDROPS, NEW, (s, o, w) => resizeEncode(s, o, w), "backdrop");
+  await run(LEGACY_KEYED, LEGACY, (s, o, w) => removeAndEncode(s, o, w), "checkerboard");
 
-  // 3. Straight copies (map + posters)
   for (const { src, out } of COPIES) {
-    const srcPath = path.join(SRC, src);
+    const srcPath = path.join(LEGACY, src);
     if (!existsSync(srcPath)) {
       console.warn(`! missing ${src} — skipped`);
       continue;
@@ -222,11 +197,14 @@ async function main() {
     console.log(`= ${src} -> ${out}`);
   }
 
-  // 4. Manifest so the app and humans know what exists.
   const produced = await readdir(OUT);
   await writeFile(
     path.join(OUT, "MANIFEST.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), files: produced.sort() }, null, 2),
+    JSON.stringify(
+      { generatedAt: new Date().toISOString(), files: produced.sort() },
+      null,
+      2,
+    ),
   );
   console.log(`\nDone. ${produced.length} files in public/assets.`);
 }

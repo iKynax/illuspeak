@@ -26,3 +26,8 @@ Thumbs.db
 
 # generated printable QR codes (regenerate with `npm run qr`)
 qr/
+
+# raw source art (large originals; processed outputs ship in public/assets).
+# Regenerate with `npm run assets` / `npm run logos` after editing these.
+NewAssets/
+LOGO/

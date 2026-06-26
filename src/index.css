@@ -24,9 +24,11 @@
   --color-lemon: #ffe53d;
   --color-lime: #8cff3d;
 
-  /* Type */
-  --font-display: "Lilita One", system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Type — CJK system fallbacks so Chinese renders when the 中 toggle is on
+     (the bundled display/body fonts have no CJK glyphs; staying lean per CLAUDE.md). */
+  --font-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-display: "Lilita One", var(--font-cjk), system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", var(--font-cjk), system-ui, sans-serif;
 
   /* Sticker-style hard offset shadow */
   --shadow-sticker: 4px 4px 0 var(--color-ink);
@@ -90,5 +92,29 @@
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top);
+  }
+
+  /* Slow auto-scrolling poster rows (About). The track holds the tiles twice;
+     translating by -50% loops seamlessly. Pause when the user grabs the row. */
+  @keyframes poster-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .poster-track {
+    animation: poster-marquee linear infinite;
+    width: max-content;
+  }
+  .poster-track:hover,
+  .poster-track:active {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .poster-track {
+      animation: none;
+    }
   }
 }

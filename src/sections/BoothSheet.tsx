@@ -1,8 +1,9 @@
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import type { Booth } from "../data/booths";
+import { loc, type Booth } from "../data/booths";
 import { Button } from "../components/Button";
 import { Sparkle } from "../components/Doodles";
+import { useLang, useUI } from "../i18n/lang";
 
 interface BoothSheetProps {
   booth: Booth;
@@ -13,6 +14,9 @@ interface BoothSheetProps {
 // Rendered via portal so it escapes the `isolate` stacking context in App.tsx
 // and always layers above the BottomTabBar.
 export function BoothSheet({ booth, onClose }: BoothSheetProps) {
+  const { lang } = useLang();
+  const ui = useUI();
+  const name = loc(booth.name, lang);
   return createPortal(
     <>
       <motion.div
@@ -46,32 +50,34 @@ export function BoothSheet({ booth, onClose }: BoothSheetProps) {
           <div className="flex gap-4">
             <img
               src={booth.posterUrl}
-              alt={`${booth.name} poster`}
-              className="ink-outline shadow-sticker-sm h-28 w-20 shrink-0 rotate-[-3deg] rounded-xl object-cover"
+              alt={`${name} poster`}
+              className="ink-outline shadow-sticker-sm h-28 w-20 shrink-0 rotate-[-3deg] rounded-xl object-cover object-top"
             />
             <div className="min-w-0 pt-1">
               <span className="ink-outline inline-block rounded-full bg-blue px-2.5 py-0.5 font-display text-xs text-ink">
-                {booth.zone}
+                {ui.zones[booth.zone]}
               </span>
               <h3 className="mt-1 font-display text-2xl leading-tight text-ink">
-                {booth.name}
+                {name}
               </h3>
               <p className="font-body text-sm font-semibold text-ink/70">
-                by {booth.student}
+                {loc(booth.student, lang)}
               </p>
             </div>
           </div>
 
-          <p className="mt-3 font-body text-[15px] text-ink/85">{booth.blurb}</p>
+          <p className="mt-3 font-body text-[15px] text-ink/85">
+            {loc(booth.blurb, lang)}
+          </p>
 
           {booth.isGameTarget && (
             <p className="mt-3 rounded-xl bg-lemon/60 px-3 py-2 font-body text-sm font-semibold text-ink">
-              ⭐ This is a stamp-rally target — scan it to collect a stamp!
+              {ui.booth.targetBadge}
             </p>
           )}
 
           <Button variant="secondary" className="mt-4 w-full" onClick={onClose}>
-            Close
+            {ui.booth.close}
           </Button>
         </div>
       </motion.div>
