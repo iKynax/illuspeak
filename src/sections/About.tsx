@@ -113,9 +113,7 @@ export function About() {
         {/* Live leaderboard (renders only when Supabase is configured) */}
         <Leaderboard />
 
-        {/* Sponsors — bare logos, no boxes/shadows, roughly uniform size.
-            Huak Huak's logo is solid white, so it alone gets a soft dark chip
-            to stay visible on the light page. */}
+        {/* Sponsors — bare logos, no boxes/shadows, roughly uniform size. */}
         <h2 className="mt-8 font-display text-2xl text-ink">{ui.about.sponsors}</h2>
         <div className="mt-4 grid grid-cols-3 items-center gap-x-4 gap-y-6">
           {sponsors.map((s) => (
@@ -123,9 +121,7 @@ export function About() {
               <img
                 src={s.logoUrl}
                 alt={s.name}
-                className={`max-h-full max-w-full object-contain ${
-                  s.id === "huak-huak" ? "rounded-xl bg-ink/75 p-1.5" : ""
-                }`}
+                className="max-h-full max-w-full object-contain"
                 draggable={false}
               />
             </div>

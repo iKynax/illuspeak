@@ -24,7 +24,7 @@ const SPONSORS = [
   { slug: "lafayette", src: "Lafayette.png" }, // converted from PDF
   { slug: "bumi", src: "Bumi.png" }, // converted from PSD
   { slug: "faber-castell", src: "FC-AG.png" }, // converted from PDF
-  { slug: "huak-huak", src: "Huak Huak.png" },
+  { slug: "huak-huak", src: "huakhuak_circle & horizontal_combined.png" }, // new black logo
   { slug: "monin", src: "LOGO_MONIN_WITH PANACHE versions_RGB_OK_Brown.png" },
   { slug: "gmbb", src: "Logo_GMBB_Space (Light background).png" },
   { slug: "playtee", src: "Playtee Cropped .png" },

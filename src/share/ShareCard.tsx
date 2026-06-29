@@ -25,7 +25,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
           width: 1080,
           height: 1920,
           background: "linear-gradient(160deg, #FFD6E8 0%, #BFE6FF 55%, #E4D6FF 100%)",
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: "'Montserrat', sans-serif",
           color: "#2A2140",
           position: "relative",
           overflow: "hidden",
@@ -54,7 +54,8 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
           style={{
             zIndex: 1,
             marginTop: 8,
-            fontFamily: "'Lilita One', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
+            fontWeight: 800,
             fontSize: 46,
             transform: "rotate(-2deg)",
             background: "#FFE53D",
@@ -76,7 +77,8 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardData>(
         <p
           style={{
             zIndex: 1,
-            fontFamily: "'Lilita One', sans-serif",
+            fontFamily: "'Montserrat', sans-serif",
+            fontWeight: 800,
             fontSize: 78,
             lineHeight: 1.05,
             margin: "8px 0 0",
@@ -163,7 +165,7 @@ function Stat({ label, value, bg }: { label: string; value: string; bg: string }
       }}
     >
       <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: 2 }}>{label}</div>
-      <div style={{ fontFamily: "'Lilita One', sans-serif", fontSize: 72, lineHeight: 1 }}>
+      <div style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 72, lineHeight: 1 }}>
         {value}
       </div>
     </div>

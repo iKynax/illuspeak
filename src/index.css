@@ -1,10 +1,35 @@
 @import "tailwindcss";
 
-/* Self-hosted fonts (offline-safe). */
-@import "@fontsource/lilita-one/400.css";
-@import "@fontsource/plus-jakarta-sans/400.css";
-@import "@fontsource/plus-jakarta-sans/600.css";
-@import "@fontsource/plus-jakarta-sans/800.css";
+/* Self-hosted Montserrat (offline-safe). One family for the whole site;
+   hierarchy comes from weight: 400 body, 600 emphasis, 700/800 display. */
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Montserrat-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/Montserrat-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/Montserrat-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/Montserrat-ExtraBold.ttf") format("truetype");
+}
 
 /*
   Illuspeak design tokens (see DESIGN.md).
@@ -24,11 +49,12 @@
   --color-lemon: #ffe53d;
   --color-lime: #8cff3d;
 
-  /* Type — CJK system fallbacks so Chinese renders when the 中 toggle is on
-     (the bundled display/body fonts have no CJK glyphs; staying lean per CLAUDE.md). */
+  /* Type — one family (Montserrat) site-wide; weight carries the hierarchy.
+     CJK system fallbacks so Chinese renders when the 中 toggle is on
+     (Montserrat has no CJK glyphs; staying lean per CLAUDE.md). */
   --font-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  --font-display: "Lilita One", var(--font-cjk), system-ui, sans-serif;
-  --font-body: "Plus Jakarta Sans", var(--font-cjk), system-ui, sans-serif;
+  --font-display: "Montserrat", var(--font-cjk), system-ui, sans-serif;
+  --font-body: "Montserrat", var(--font-cjk), system-ui, sans-serif;
 
   /* Sticker-style hard offset shadow */
   --shadow-sticker: 4px 4px 0 var(--color-ink);
@@ -37,6 +63,13 @@
 }
 
 @layer base {
+  /* This site has exactly one look. Opt out of any phone/browser dark-theme
+     auto-darkening (e.g. Chrome Android "Auto Dark Theme") so the pastel
+     palette renders identically regardless of the device theme. */
+  :root {
+    color-scheme: only light;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
@@ -49,6 +82,12 @@
     background: var(--color-paper);
     /* Lock to a calm pastel wash by default. */
     overscroll-behavior-y: none;
+  }
+
+  /* font-display sets only the family; bind a heavy weight so headings and
+     chunky UI keep their display-face punch now the site is one font. */
+  .font-display {
+    font-weight: 800;
   }
 
   /* Disable text selection on UI chrome for an app-like feel. */

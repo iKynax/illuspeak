@@ -31,3 +31,6 @@ qr/
 # Regenerate with `npm run assets` / `npm run logos` after editing these.
 NewAssets/
 LOGO/
+
+# raw font source (full Montserrat family; the 4 used weights ship in public/fonts).
+Montserrat/
